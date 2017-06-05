@@ -53,13 +53,18 @@ class RepoListViewModel : BaseViewModel(), ItemEventListener {
 
     fun getReposFromGithub() {
         isLoading.set(true)
+        val isFirst = true
         compositeDisposable += githubRepository.getAll()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onNext = {
-                    isLoading.set(false)
-                    items.clear()
-                    items.addAll(it.map { RepoItem(it) })
+                    if(isFirst && it.isEmpty()) {
+                        onRefresh()
+                    } else {
+                        isLoading.set(false)
+                        items.clear()
+                        items.addAll(it.map { RepoItem(it) })
+                    }
                 }, onError = {
                     it.printStackTrace()
                     it.message?.let { toastLiveData.sendMessage(it) }
